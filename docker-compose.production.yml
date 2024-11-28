@@ -22,17 +22,15 @@ services:
   frontend:
     image: onixsofi/foodgram_frontend
     env_file: .env
-    # command: cp -r /app/build/. /static/
     volumes:
       - static:/result_build/
     depends_on:
       - backend
   proxy:
-    image: nginx:1.25.4-alpine
+    image: onixsofi/foodgram_proxy
     ports:
       - 9500:80
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - media:/media/
       - static:/static/
     depends_on:
