@@ -2,7 +2,7 @@
 [![Main Foodgram workflow](https://github.com/Christina-GordiichukPotashevIlya/foodgram/actions/workflows/main.yml/badge.svg)](https://github.com/Christina-Gordiichuk/foodgram/actions/workflows/main.yml)
 
 # Проект Foodgram
-## Описание проекта
+## Описание проектаgit 
 Foodgram - это сервис для публикации рецептов самых разнообразных блюд. Вы можете публиковать собственные рецепты, изучать рецепты других пользователей, подписываться на других пользователей, добавлять рецепты в избранное, добавлять рецепты в корзину, а перед походом в магазин скачать файлом список всех необходимых ингредиентов для покупки. 
 
 ## Как запустить проект в контейнерах
@@ -96,4 +96,4 @@ ___
 Python, Django, Gunicorn, nginx, Rest API (DRF), PostgreSQL, Docker, CI/CD (GitHub Actions), React, Yandex Cloud.
 ___  
 #### Автор проекта:    
-:small_orange_diamond: [Поташев Илья](https://github.com/Christina-Gordiichuk)
+:small_orange_diamond: [Гордийчук Кристина](https://github.com/Christina-Gordiichuk)
