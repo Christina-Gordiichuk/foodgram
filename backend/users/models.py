@@ -14,7 +14,7 @@ class MyUser(AbstractUser):
         'Логин пользователя',
         max_length=150,
         unique=True,
-        validators=[RegexValidator(r'^[\w.@+-]+\Z'),]
+        validators=[RegexValidator(r'^[\w.@+-]+\Z')]
     )
     first_name = models.CharField('Имя', max_length=150)
     last_name = models.CharField('Фамилия', max_length=150)
