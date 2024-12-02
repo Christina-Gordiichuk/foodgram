@@ -2,7 +2,7 @@
 [![Main Foodgram workflow](https://github.com/Christina-GordiichukPotashevIlya/foodgram/actions/workflows/main.yml/badge.svg)](https://github.com/Christina-Gordiichuk/foodgram/actions/workflows/main.yml)
 
 # Проект Foodgram
-## Описание проектаgit 
+## Описание проекта 
 Foodgram - это сервис для публикации рецептов самых разнообразных блюд. Вы можете публиковать собственные рецепты, изучать рецепты других пользователей, подписываться на других пользователей, добавлять рецепты в избранное, добавлять рецепты в корзину, а перед походом в магазин скачать файлом список всех необходимых ингредиентов для покупки. 
 
 ## Как запустить проект в контейнерах
