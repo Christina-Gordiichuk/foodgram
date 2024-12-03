@@ -61,7 +61,7 @@ class Subscription(models.Model):
                 name='unique_user_subscription'
             )
         ]
-        ordering = ['user', 'subscribed_user'] 
+        ordering = ['user', 'subscribed_user']
 
     def __str__(self):
         return (
