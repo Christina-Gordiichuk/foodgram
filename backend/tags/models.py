@@ -11,9 +11,10 @@ class Tag(models.Model):
         blank=True
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name

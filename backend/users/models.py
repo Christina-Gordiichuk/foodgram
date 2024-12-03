@@ -28,6 +28,10 @@ class MyUser(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        ordering = ['username']
+
+    def __str__(self):
+        return self.username
 
 
 User = get_user_model()
@@ -57,6 +61,7 @@ class Subscription(models.Model):
                 name='unique_user_subscription'
             )
         ]
+        ordering = ['user', 'subscribed_user'] 
 
     def __str__(self):
         return (
