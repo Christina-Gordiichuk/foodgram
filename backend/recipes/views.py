@@ -14,9 +14,9 @@ from rest_framework.mixins import (
 )
 
 from recipes.models import Recipe, ShoppingCart, Favorite
-from recipes.pagination import CustomPagination
-from recipes.filters import RecipeFilter
-from recipes.serializers import RecipeSerializer
+from api.pagination import CustomPagination
+from api.filters import RecipeFilter
+from api.serializers import RecipeSerializer
 from rest_framework.generics import GenericAPIView
 
 

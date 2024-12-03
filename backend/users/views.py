@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import MyUser, Subscription
-from .serializers import UserSerializer, UserWithRecipesSerializer
+from api.serializers import UserSerializer, UserWithRecipesSerializer
 
 
 class UserListView(APIView):
