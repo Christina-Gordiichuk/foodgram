@@ -63,10 +63,22 @@ class RecipeListView(GenericAPIView, ListModelMixin):
 
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
+
+        is_in_cart = request.query_params.get('is_in_shopping_cart', None)
+        if is_in_cart is not None:
+            is_in_cart = is_in_cart.lower() in ['true', '1', 't', 'y', 'yes']
+            if is_in_cart:
+                queryset = queryset.filter(in_shopping_cart__user=request.user)
+            else:
+                queryset = queryset.exclude(
+                    in_shopping_cart__user=request.user
+                )
+
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
+
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
