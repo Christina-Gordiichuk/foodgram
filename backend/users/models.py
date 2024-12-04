@@ -4,7 +4,7 @@ from django.core.validators import RegexValidator
 from django.db import models
 
 
-class MyUser(AbstractUser):
+class User(AbstractUser):
     email = models.EmailField(
         'email',
         max_length=254,
@@ -32,9 +32,6 @@ class MyUser(AbstractUser):
 
     def __str__(self):
         return self.username
-
-
-User = get_user_model()
 
 
 class Subscription(models.Model):

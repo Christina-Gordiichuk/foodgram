@@ -1,11 +1,19 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from ingredients.models import Ingredient
 from tags.models import Tag
 
+
 User = get_user_model()
+
+COOKING_TIME_MIN = 1
+COOKING_TIME_MAX = 32000
+
+AMOUNT_MIN = 1
+AMOUNT_MAX = 32000
 
 
 class Recipe(models.Model):
@@ -19,7 +27,23 @@ class Recipe(models.Model):
     )
     image = models.ImageField('Изображение', upload_to='recipes/')
     text = models.TextField('Описание')
-    cooking_time = models.PositiveIntegerField('Время приготовления (мин)')
+    cooking_time = models.PositiveIntegerField(
+        'Время приготовления (мин)',
+        validators=[
+            MinValueValidator(
+                COOKING_TIME_MIN,
+                message=(
+                    f'Время приготовления не меньше {COOKING_TIME_MIN} минут.'
+                ),
+            ),
+            MaxValueValidator(
+                COOKING_TIME_MAX,
+                message=(
+                    f'Время приготовления не больше {COOKING_TIME_MAX} минут.'
+                ),
+            )
+        ]
+    )
     tags = models.ManyToManyField(
         Tag,
         related_name='recipes',
@@ -55,7 +79,19 @@ class RecipeIngredient(models.Model):
         related_name='in_recipes',
         verbose_name='Ингредиент',
     )
-    amount = models.PositiveIntegerField('Количество')
+    amount = models.PositiveIntegerField(
+        'Количество',
+        validators=[
+            MinValueValidator(
+                AMOUNT_MIN,
+                message=f'Количество не может быть меньше {AMOUNT_MIN}.'
+            ),
+            MaxValueValidator(
+                AMOUNT_MAX,
+                message=f'Количество не может превышать {AMOUNT_MAX}.'
+            )
+        ]
+    )
 
     class Meta:
         verbose_name = 'Ингредиент рецепта'

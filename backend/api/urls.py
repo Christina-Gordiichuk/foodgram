@@ -1,33 +1,31 @@
 from django.urls import include, path
 
-from ingredients.views import IngredientDetailView, IngredientListView
-
-from recipes.views import (
-    RecipeListView,
-    RecipeDetailView,
-    RecipeCreateView,
-    RecipeUpdateView,
-    RecipeDeleteView,
-    RecipeShortLinkView,
-    DownloadShoppingListView,
-    AddRecipeToShoppingListView,
-    RemoveRecipeFromShoppingListView,
+from api.views import (
     AddRecipeToFavoritesView,
-    RemoveFavoriteView,
-)
-
-from tags.views import TagDetailView, TagListView
-
-from users.views import (
+    AddRecipeToShoppingListView,
     ChangePasswordView,
     CurrentUserView,
+    DownloadShoppingListView,
+    IngredientDetailView,
+    IngredientListView,
+    RecipeCreateView,
+    RecipeDeleteView,
+    RecipeDetailView,
+    RecipeListView,
+    RecipeShortLinkView,
+    RecipeUpdateView,
+    RemoveFavoriteView,
+    RemoveRecipeFromShoppingListView,
+    SubscriptionsView,
+    SubscribeView,
+    TagDetailView,
+    TagListView,
+    UnsubscribeView,
     UpdateAvatarView,
     UserListView,
     UserProfileView,
-    MySubscriptionsView,
-    SubscribeView,
-    UnsubscribeView,
 )
+
 
 urlpatterns = [
     # Получаем список пользователей.
@@ -63,7 +61,7 @@ urlpatterns = [
     # Подписки.
     path(
         'subscriptions/',
-        MySubscriptionsView.as_view(),
+        SubscriptionsView.as_view(),
         name='my_subscriptions'
     ),
     # Подписаться на пользователя.
