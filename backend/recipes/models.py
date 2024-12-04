@@ -55,6 +55,13 @@ class Recipe(models.Model):
         related_name='recipes',
         verbose_name='Ингредиенты',
     )
+    in_shopping_cart = models.ManyToManyField(
+        User,
+        related_name='shopping_cart_recipes',
+        through='ShoppingCart',
+        blank=True,
+        verbose_name='В корзине покупок'
+    )
 
     class Meta:
         verbose_name = 'Рецепт'

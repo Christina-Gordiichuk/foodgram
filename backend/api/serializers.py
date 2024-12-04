@@ -8,7 +8,7 @@ from rest_framework import serializers, validators
 from ingredients.models import Ingredient
 from recipes.models import Favorite, Recipe, RecipeIngredient, ShoppingCart
 from tags.models import Tag
-from users.models import MyUser
+from users.models import User
 
 
 # Ограничения поля amount.
@@ -100,7 +100,7 @@ class UserSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
 
     class Meta:
-        model = MyUser
+        model = User
         fields = [
             'id',
             'email',
@@ -176,20 +176,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         """Проверяем, находится ли рецепт в корзине покупок у пользователя."""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.in_shopping_cart.filter(user=request.user).exists()
-        return False
-
-    def _process_ingredients(self, recipe, ingredients):
-        """Обрабатываем ингредиенты для рецепта."""
-        recipe_ingredients = [
-            RecipeIngredient(
-                recipe=recipe,
-                ingredient=get_object_or_404(Ingredient, pk=item['id']),
-                amount=item['amount']
+            return (
+                ShoppingCart.objects
+                .filter(user=request.user, recipe=obj)
+                .exists()
             )
-            for item in ingredients
-        ]
-        RecipeIngredient.objects.bulk_create(recipe_ingredients)
+        return False
 
     def create(self, validated_data):
         """Создаем новый рецепт."""
@@ -299,7 +291,7 @@ class UserWithRecipesSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = MyUser
+        model = User
         fields = [
             'id',
             'username',
