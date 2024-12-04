@@ -140,7 +140,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     image = Base64ImageField()
     is_favorited = serializers.BooleanField(default=False, read_only=True)
-    is_in_shopping_cart = serializers.BooleanField(
+    is_in_shopping_cart = serializers.SerializerMethodField(
         default=False,
         read_only=True
     )
