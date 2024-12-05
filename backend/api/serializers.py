@@ -140,7 +140,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     image = Base64ImageField()
     is_favorited = serializers.BooleanField(default=False, read_only=True)
-    in_shopping_cart = serializers.SerializerMethodField(
+    is_in_shopping_cart = serializers.SerializerMethodField(
         default=False,
         read_only=True
     )
@@ -169,14 +169,14 @@ class RecipeSerializer(serializers.ModelSerializer):
             'text',
             'cooking_time',
             'image',
-            'in_shopping_cart'
+            'is_in_shopping_cart'
         ]
 
     def get_is_in_shopping_cart(self, obj):
         """Проверяем, находится ли рецепт в корзине покупок у пользователя."""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.in_shopping_cart.filter(user=request.user).exists()
+            return obj.is_in_shopping_cart.filter(user=request.user).exists()
         return False
 
     def create(self, validated_data):

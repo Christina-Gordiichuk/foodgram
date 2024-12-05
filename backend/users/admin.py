@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import MyUser, Subscription
+from .models import User, Subscription
 
 
-@admin.register(MyUser)
+@admin.register(User)
 class MyUserAdmin(admin.ModelAdmin):
     """MyUser."""
     list_display = (
