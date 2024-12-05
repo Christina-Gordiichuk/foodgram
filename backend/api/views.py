@@ -4,8 +4,9 @@ import uuid
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework import generics, filters, status, permissions
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.mixins import (
@@ -15,20 +16,24 @@ from rest_framework.mixins import (
     DestroyModelMixin,
 )
 from rest_framework.generics import GenericAPIView
-from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.permissions import IsAuthenticated
 
 from ingredients.models import Ingredient
 from recipes.models import Recipe, ShoppingCart, Favorite
-from api.serializers import IngredientSerializer, RecipeSerializer
-from api.pagination import CustomPagination
-from api.filters import RecipeFilter
-from users.models import User, Subscription
 from tags.models import Tag
+from users.models import User, Subscription
+from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
+    IngredientSerializer,
+    RecipeSerializer,
     TagSerializer,
     UserSerializer,
-    UserWithRecipesSerializer
+    UserWithRecipesSerializer,
+    ShoppingCartSerializer,
+    FavoriteSerializer,
 )
+from api.pagination import CustomPagination
+from api.filters import RecipeFilter
 
 
 class IngredientListView(generics.ListAPIView):
@@ -96,26 +101,24 @@ class RecipeCreateView(CreateModelMixin, APIView):
 
 class RecipeUpdateView(APIView):
     """Обновляем рецепт, доступен только автору рецепта."""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAuthorOrReadOnly]
 
     def patch(self, request, id, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=id)
-        if recipe.author != request.user:
-            raise PermissionDenied('Вы не являетесь автором этого рецепта!')
+        self.check_object_permissions(request, recipe)
         serializer = RecipeSerializer(recipe, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
 
 
-class RecipeDeleteView(DestroyModelMixin, APIView):
+class RecipeDeleteView(APIView):
     """Удаляем рецепт, доступно только автору."""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
 
     def delete(self, request, id, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=id)
-        if recipe.author != request.user:
-            raise PermissionDenied('Вы не являетесь автором этого рецепта!')
+        self.check_object_permissions(request, recipe)
         recipe.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -146,25 +149,20 @@ class DownloadShoppingListView(APIView):
 
 class AddRecipeToShoppingListView(APIView):
     """Добавляем рецепт в список покупок."""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, id, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=id)
-        shopping_list_item, created = ShoppingCart.objects.get_or_create(
-            user=request.user, recipe=recipe
+        data = {
+            'user': request.user.id,
+            'recipe': recipe.id,
+        }
+        serializer = ShoppingCartSerializer(
+            data=data, context={'request': request}
         )
-        if created:
-            recipe_data = {
-                'id': recipe.id,
-                'name': recipe.name,
-                'image': request.build_absolute_uri(recipe.image.url),
-                'cooking_time': recipe.cooking_time,
-            }
-            return Response(recipe_data, status=status.HTTP_201_CREATED)
-        return Response(
-            {'detail': 'Рецепт уже в списке покупок!'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class RemoveRecipeFromShoppingListView(DestroyModelMixin, APIView):
@@ -179,28 +177,24 @@ class RemoveRecipeFromShoppingListView(DestroyModelMixin, APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class AddRecipeToFavoritesView(CreateModelMixin, APIView):
+class AddRecipeToFavoritesView(APIView):
     """Добавляем рецепт в избранное."""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, id, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=id)
         favorite, created = Favorite.objects.get_or_create(
-            user=request.user,
-            recipe=recipe
+            user=request.user, recipe=recipe
         )
+
         if not created:
             return Response(
                 {'detail': 'Рецепт уже в избранном!'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        recipe_data = {
-            'id': recipe.id,
-            'name': recipe.name,
-            'image': request.build_absolute_uri(recipe.image.url),
-            'cooking_time': recipe.cooking_time,
-        }
-        return Response(recipe_data, status=status.HTTP_201_CREATED)
+        serializer = FavoriteSerializer(favorite)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class RemoveFavoriteView(DestroyModelMixin, APIView):
@@ -368,8 +362,8 @@ class SubscribeView(APIView):
 
     def post(self, request, id):
         subscribed_user = get_object_or_404(User, id=id)
-        if Subscription.objects.filter(
-            user=request.user,
+
+        if request.user.subscriptions.filter(
             subscribed_user=subscribed_user
         ).exists():
             return Response(
@@ -390,8 +384,7 @@ class UnsubscribeView(APIView):
 
     def delete(self, request, id):
         subscribed_user = get_object_or_404(User, id=id)
-        subscription = Subscription.objects.filter(
-            user=request.user,
+        subscription = request.user.subscriptions.filter(
             subscribed_user=subscribed_user
         )
 

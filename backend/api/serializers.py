@@ -90,8 +90,7 @@ class IngredientsSerializer(serializers.ModelSerializer):
         ordering = ['id']
 
     def to_representation(self, instance):
-        data = super().to_representation(instance)
-        return data
+        return super().to_representation(instance)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -207,16 +206,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         ingredients = self.initial_data['ingredients']
         tags = self.initial_data['tags']
-        cooking_time = validated_data.get(
-            'cooking_time', instance.cooking_time
-        )
-        if not (AMOUNT_MIN <= cooking_time <= AMOUNT_MAX):
-            raise serializers.ValidationError({
-                'cooking_time': (
-                    f'Время приготовления должно быть между {AMOUNT_MIN} и'
-                    f'{AMOUNT_MAX}.'
-                )
-            })
+
         instance.name = validated_data.get('name', instance.name)
         instance.text = validated_data.get('text', instance.text)
         instance.cooking_time = validated_data.get(
@@ -230,8 +220,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance):
-        data = super().to_representation(instance)
-        return data
+        return super().to_representation(instance)
 
 
 class ShoppingListSerializer(serializers.ModelSerializer):
@@ -243,10 +232,19 @@ class ShoppingListSerializer(serializers.ModelSerializer):
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
     """Сериализатор для модели ShoppingCart."""
+    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
 
     class Meta:
         model = ShoppingCart
         fields = ['id', 'user', 'recipe']
+
+    def validate(self, data):
+        """Проверяем, что рецепт ещё не в списке покупок пользователя."""
+        user = self.context['request'].user
+        recipe = data['recipe']
+        if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+            raise serializers.ValidationError('Рецепт уже в списке покупок!')
+        return data
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
