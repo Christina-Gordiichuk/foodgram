@@ -3,7 +3,7 @@ import uuid
 
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers, validators
+from rest_framework import serializers
 
 from ingredients.models import Ingredient
 from recipes.models import Favorite, Recipe, RecipeIngredient, ShoppingCart
