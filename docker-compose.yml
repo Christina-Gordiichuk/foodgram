@@ -2,6 +2,7 @@ volumes:
   media_volume:
   static_volume:
   pg_data:
+  docs:
 
 services:
   db:
@@ -43,5 +44,7 @@ services:
       - media_volume:/mnt/media
     # mount shared static_volume to /mnt/static
       - static_volume:/mnt/static
+    # mount docs
+      - docs:/mnt/docs
     depends_on:
       - backend
