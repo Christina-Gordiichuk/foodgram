@@ -7,7 +7,7 @@ const SubscriptionList = ({ subscriptions, removeSubscription }) => {
       key={subscription.id}
       removeSubscription={removeSubscription}
       {...subscription}
-    />)}
+    />) }
   </div>
 }
 

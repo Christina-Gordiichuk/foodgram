@@ -8,31 +8,45 @@ export default function useRecipes () {
   const [ recipesPage, setRecipesPage ] = useState(1)
   const { value: tagsValue, handleChange: handleTagsChange, setValue: setTagsValue } = useTags()
 
-  const handleLike = ({ id, toLike = true }) => {
-    const method = toLike ? api.addToFavorites.bind(api) : api.removeFromFavorites.bind(api)
-    method({ id }).then(res => {
-      const recipesUpdated = recipes.map(recipe => {
-        if (recipe.id === id) {
-          recipe.is_favorited = toLike
+  const handleLike = ({ id, toLike }) => {
+    // Select the appropriate API method based on the action
+    const method = toLike
+      ? api.addToFavorites.bind(api)
+      : api.removeFromFavorites.bind(api);
+  
+    method({ id })
+      .then((res) => {
+        // Ensure the response is valid (optional validation step)
+        if (!res) {
+          console.log(res);
+          throw new Error("Unexpected response from the API");
         }
-        return recipe
+  
+        // Update the recipes state
+        setRecipes((prevRecipes) =>
+          prevRecipes.map((recipe) =>
+            recipe.id === id ? { ...recipe, is_favorited: toLike } : recipe
+          )
+        );
       })
-      setRecipes(recipesUpdated)
-    })
-    .catch(err => {
-      const { errors } = err
-      if (errors) {
-        alert(errors)
-      }
-    })
-  }
+      .catch((err) => {
+        // Enhanced error handling for more informative alerts/logs
+        const { errors } = err;
+        if (errors) {
+          alert(errors.join("\n")); // Display all errors, each on a new line
+        } else {
+          console.error("Failed to toggle favorite:", err.message || err);
+        }
+      });
+  };
+  
 
   const handleAddToCart = ({ id, toAdd = true, callback }) => {
     const method = toAdd ? api.addToOrders.bind(api) : api.removeFromOrders.bind(api)
     method({ id }).then(res => {
       const recipesUpdated = recipes.map(recipe => {
         if (recipe.id === id) {
-          recipe.is_in_shopping_cart = toAdd
+          recipe.in_shopping_cart = toAdd
         }
         return recipe
       })

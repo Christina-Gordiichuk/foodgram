@@ -11,7 +11,7 @@ const Card = ({
   id,
   image,
   is_favorited,
-  is_in_shopping_cart,
+  in_shopping_cart,
   tags,
   cooking_time,
   author = {},
@@ -88,12 +88,12 @@ const Card = ({
               }
               handleAddToCart({
                 id,
-                toAdd: Number(!is_in_shopping_cart),
+                toAdd: Number(!in_shopping_cart),
                 callback: updateOrders,
               });
             }}
           >
-            {is_in_shopping_cart ? (
+            {in_shopping_cart ? (
               <>
                 <Icons.CheckIcon />
                 Рецепт добавлен

@@ -24,8 +24,14 @@ const Favorites = ({ updateOrders }) => {
     api
       .getRecipes({ page, is_favorited: Number(true), tags })
       .then(res => {
+        console.log("Fetched recipes:", res)
         const { results, count } = res
-        setRecipes(results)
+        setRecipes((prevRecipes) => {
+          console.log("Previous state:", prevRecipes);
+          const updatedRecipes = results.map((recipe) => ({ ...recipe, is_favorited: true })); // Ensure immutability
+          console.log("Updated state:", updatedRecipes);
+          return updatedRecipes;
+        });
         setRecipesCount(count)
       })
   }
