@@ -1,26 +1,20 @@
 from django.urls import include, path
 
 from api.views import (
-    AddRecipeToFavoritesView,
     AddRecipeToShoppingListView,
     ChangePasswordView,
     CurrentUserView,
     DownloadShoppingListView,
     IngredientDetailView,
     IngredientListView,
-    RecipeCreateView,
-    RecipeDeleteView,
+    RecipeAPIView,
     RecipeDetailView,
-    RecipeListView,
     RecipeShortLinkView,
-    RecipeUpdateView,
-    RemoveFavoriteView,
-    RemoveRecipeFromShoppingListView,
+    RecipeFavoritesView,
     SubscriptionsView,
     SubscribeView,
     TagDetailView,
     TagListView,
-    UnsubscribeView,
     UpdateAvatarView,
     UsersView,
     UserProfileView,
@@ -63,27 +57,21 @@ urlpatterns = [
     ),
     # Изменение пароля.
     path(
-        'users/me/password/',
+        'users/set_password/',
         ChangePasswordView.as_view(),
         name='change-password'
     ),
     # Подписки.
     path(
-        'subscriptions/',
+        'users/subscriptions/',
         SubscriptionsView.as_view(),
         name='my_subscriptions'
     ),
-    # Подписаться на пользователя.
+    # Подписаться на пользователя. Отписаться от пользователя.
     path(
-        'subscribe/<int:id>/',
+        'users/<int:id>/subscribe/',
         SubscribeView.as_view(),
         name='subscribe'
-    ),
-    # Отписаться от пользователя.
-    path(
-        'unsubscribe/<int:id>/',
-        UnsubscribeView.as_view(),
-        name='unsubscribe'
     ),
     # Список тегов.
     path(
@@ -109,17 +97,11 @@ urlpatterns = [
         IngredientDetailView.as_view(),
         name='ingredient-detail'
     ),
-    # Список рецептов.
+    # Создаем, получаем, обновляем, удаляем рецепт.
     path(
         'recipes/',
-        RecipeListView.as_view(),
+        RecipeAPIView.as_view(),
         name='recipe-list'
-    ),
-    # Создание рецепта.
-    path(
-        'recipes/create/',
-        RecipeCreateView.as_view(),
-        name='recipe-create'
     ),
     # Получаем рецепт.
     path(
@@ -127,52 +109,28 @@ urlpatterns = [
         RecipeDetailView.as_view(),
         name='recipe-detail'
     ),
-    # Обновление рецепта.
-    path(
-        'recipes/<int:id>/update/',
-        RecipeUpdateView.as_view(),
-        name='recipe-update'
-    ),
-    # Удаление рецепта.
-    path(
-        'recipes/<int:id>/delete/',
-        RecipeDeleteView.as_view(),
-        name='recipe-delete'
-    ),
     # Короткая ссылка.
     path(
-        'recipes/<int:id>/short-link/',
+        'recipes/<int:id>/get-link/',
         RecipeShortLinkView.as_view(),
         name='recipe-short-link'
     ),
     # Скачать список покупок.
     path(
-        'shopping-list/download/',
+        'recipes/download_shopping_cart/',
         DownloadShoppingListView.as_view(),
         name='download-shopping-list'
     ),
-    # Добавить рецепт в список покупок.
+    # Добавить рецепт в список покупок. Удалить рецепт из списка покупок.
     path(
-        'shopping-list/add/<int:id>/',
+        'recipes/<int:id>/shopping_cart/',
         AddRecipeToShoppingListView.as_view(),
         name='add-recipe-to-shopping-list'
     ),
-    # Удалить рецепт из списка покупок.
+    # Добавить в избранное. Удалить из избранного.
     path(
-        'shopping-list/remove/<int:id>/',
-        RemoveRecipeFromShoppingListView.as_view(),
-        name='remove-recipe-from-shopping-list'
-    ),
-    # Добавить в избранное.
-    path(
-        'favorites/add/<int:id>/',
-        AddRecipeToFavoritesView.as_view(),
+        'recipes/<int:id>/favorite/',
+        RecipeFavoritesView.as_view(),
         name='add-recipe-to-favorites'
-    ),
-    # Удалить из избранного.
-    path(
-        'favorites/remove/<int:id>/',
-        RemoveFavoriteView.as_view(),
-        name='remove-favorite'
-    ),
+    )
 ]

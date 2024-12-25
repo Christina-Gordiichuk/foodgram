@@ -60,23 +60,64 @@ class IngredientDetailView(generics.RetrieveAPIView):
     lookup_field = 'id'
 
 
-class RecipeListView(GenericAPIView, ListModelMixin):
-    """Получаем список рецептов."""
+class RecipeAPIView(APIView):
+    """
+    Unified API view for Recipe operations: list, create, update, and delete.
+    """
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = RecipeFilter
-    serializer_class = RecipeSerializer
-    queryset = Recipe.objects.all()
+
+    def get_queryset(self):
+        return Recipe.objects.all()
 
     def get(self, request, *args, **kwargs):
+        """List recipes."""
         queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request)
         if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
+            serializer = RecipeSerializer(page, many=True, context={'request': request})
+            return paginator.get_paginated_response(serializer.data)
+        serializer = RecipeSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        """Create a new recipe."""
+        self.permission_classes = [permissions.IsAuthenticated]
+        serializer = RecipeSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save(author=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def patch(self, request, id, *args, **kwargs):
+        """Update a recipe (author only)."""
+        recipe = get_object_or_404(Recipe, id=id)
+        self.check_object_permissions(request, recipe)
+        serializer = RecipeSerializer(recipe, data=request.data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def delete(self, request, id, *args, **kwargs):
+        """Delete a recipe (author only)."""
+        recipe = get_object_or_404(Recipe, id=id)
+        self.check_object_permissions(request, recipe)
+        recipe.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def filter_queryset(self, queryset):
+        """Apply filters to the queryset."""
+        for backend in self.filter_backends:
+            queryset = backend().filter_queryset(self.request, queryset, self)
+        return queryset
+
+    def check_object_permissions(self, request, obj):
+        """Check permissions for object-level operations."""
+        for permission in self.permission_classes:
+            if not permission().has_object_permission(request, self, obj):
+                self.permission_denied(request)
 
 
 class RecipeDetailView(RetrieveModelMixin, APIView):
@@ -88,42 +129,6 @@ class RecipeDetailView(RetrieveModelMixin, APIView):
         recipe = get_object_or_404(Recipe, id=id)
         serializer = self.serializer_class(recipe)
         return Response(serializer.data)
-
-
-class RecipeCreateView(CreateModelMixin, APIView):
-    """Создаем новый рецепт."""
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = RecipeSerializer
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(author=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class RecipeUpdateView(APIView):
-    """Обновляем рецепт, доступен только автору рецепта."""
-    permission_classes = [permissions.IsAuthenticated, IsAuthorOrReadOnly]
-
-    def patch(self, request, id, *args, **kwargs):
-        recipe = get_object_or_404(Recipe, id=id)
-        self.check_object_permissions(request, recipe)
-        serializer = RecipeSerializer(recipe, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
-
-class RecipeDeleteView(APIView):
-    """Удаляем рецепт, доступно только автору."""
-    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
-
-    def delete(self, request, id, *args, **kwargs):
-        recipe = get_object_or_404(Recipe, id=id)
-        self.check_object_permissions(request, recipe)
-        recipe.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RecipeShortLinkView(APIView):
@@ -167,11 +172,6 @@ class AddRecipeToShoppingListView(APIView):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
-class RemoveRecipeFromShoppingListView(DestroyModelMixin, APIView):
-    """Удаляем рецепт из списка покупок."""
-    permission_classes = [permissions.IsAuthenticated]
-
     def delete(self, request, id, *args, **kwargs):
         shopping_list_item = get_object_or_404(
             ShoppingCart, user=request.user, recipe__id=id
@@ -180,7 +180,7 @@ class RemoveRecipeFromShoppingListView(DestroyModelMixin, APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class AddRecipeToFavoritesView(APIView):
+class RecipeFavoritesView(APIView):
     """Добавляем рецепт в избранное."""
     permission_classes = [IsAuthenticated]
 
@@ -198,11 +198,6 @@ class AddRecipeToFavoritesView(APIView):
         serializer = FavoriteSerializer(favorite)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class RemoveFavoriteView(DestroyModelMixin, APIView):
-    """Удаляем рецепт из избранного."""
-    permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request, id, *args, **kwargs):
         favorite = get_object_or_404(Favorite, user=request.user, recipe_id=id)
@@ -390,11 +385,6 @@ class SubscribeView(APIView):
         )
         serializer = UserWithRecipesSerializer(subscribed_user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class UnsubscribeView(APIView):
-    """Отписаться от пользователя."""
-    permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request, id):
         subscribed_user = get_object_or_404(User, id=id)

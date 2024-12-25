@@ -13,7 +13,7 @@ class Command(BaseCommand):
             for line in lines:
                 data = line.split(',')
                 try:
-                    ingr = Tag.objects.create(name=data[0], slug=data[0])
+                    ingr = Tag.objects.create(name=data[0].strip(), slug=data[0].strip())
                     ingr.save()
                 except IntegrityError:
                     continue

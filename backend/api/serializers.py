@@ -139,7 +139,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     image = Base64ImageField()
     is_favorited = serializers.BooleanField(default=False, read_only=True)
-    is_in_shopping_cart = serializers.SerializerMethodField(
+    in_shopping_cart = serializers.SerializerMethodField(
         default=False,
         read_only=True
     )
@@ -168,14 +168,23 @@ class RecipeSerializer(serializers.ModelSerializer):
             'text',
             'cooking_time',
             'image',
-            'is_in_shopping_cart'
+            'in_shopping_cart'
         ]
 
-    def get_is_in_shopping_cart(self, obj):
+    def get_is_favorited(self, obj):
+        """Check if the recipe is favorited by the current user."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return Favorite.objects.filter(user=request.user, recipe=obj).exists()
+        print(request.user.is_authenticated)
+        return False
+
+    def get_in_shopping_cart(self, obj):
         """Проверяем, находится ли рецепт в корзине покупок у пользователя."""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.is_in_shopping_cart.filter(user=request.user).exists()
+            return obj.in_shopping_cart.filter(user=request.user).exists()
+        print(request.user.is_authenticated)
         return False
 
     def create(self, validated_data):
@@ -215,9 +224,15 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.image = validated_data.get('image', instance.image)
         instance.tags.set(get_object_or_404(Tag, pk=id) for id in tags)
         instance.recipe_ingredients.all().delete()
-
-        self._process_ingredients(instance, ingredients)
+        instance.ingredients.set(get_object_or_404(Tag, pk=id) for id in tags)
         return instance
+
+    def _process_ingredients(self, recipe, ingredients_data):
+        ingredients = [
+            RecipeIngredient(recipe=recipe, ingredient=Ingredient.objects.get(id=ingredient['id']), amount=ingredient['amount'])
+            for ingredient in ingredients_data
+        ]
+        RecipeIngredient.objects.bulk_create(ingredients)
 
     def to_representation(self, instance):
         return super().to_representation(instance)

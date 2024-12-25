@@ -13,8 +13,8 @@ class Command(BaseCommand):
             for line in lines:
                 data = line.split(',')
                 try:
-                    ingr = Ingredient.objects.create(name=data[0],
-                                                     measurement_unit=data[1])
+                    ingr = Ingredient.objects.create(name=data[0].strip(),
+                                                     measurement_unit=data[1].strip())
                     ingr.save()
                 except IntegrityError:
                     continue
