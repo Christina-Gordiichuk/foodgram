@@ -130,6 +130,16 @@ class RecipeDetailView(RetrieveModelMixin, APIView):
         serializer = self.serializer_class(recipe)
         return Response(serializer.data)
 
+    def patch(self, request, id, *args, **kwargs):
+        """Update a recipe (author only)."""
+        permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+        recipe = get_object_or_404(Recipe, id=id)
+        self.check_object_permissions(request, recipe)
+        serializer = RecipeSerializer(recipe, data=request.data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
 
 class RecipeShortLinkView(APIView):
     """Получаем сокращенную ссылку на рецепт по его ID."""

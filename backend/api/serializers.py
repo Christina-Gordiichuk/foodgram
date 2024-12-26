@@ -182,9 +182,10 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_in_shopping_cart(self, obj):
         """Проверяем, находится ли рецепт в корзине покупок у пользователя."""
         request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return obj.in_shopping_cart.filter(user=request.user).exists()
-        print(request.user.is_authenticated)
+        if request:
+            if request.user.is_authenticated:
+                print(request.user.is_authenticated)
+                return obj.in_shopping_cart.filter(user=request.user).exists()
         return False
 
     def create(self, validated_data):
@@ -224,7 +225,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.image = validated_data.get('image', instance.image)
         instance.tags.set(get_object_or_404(Tag, pk=id) for id in tags)
         instance.recipe_ingredients.all().delete()
-        instance.ingredients.set(get_object_or_404(Tag, pk=id) for id in tags)
+        instance.ingredients.set(get_object_or_404(Ingredient, pk=i['id']) for i in ingredients)
         return instance
 
     def _process_ingredients(self, recipe, ingredients_data):
