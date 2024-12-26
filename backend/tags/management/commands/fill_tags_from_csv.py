@@ -8,7 +8,7 @@ class Command(BaseCommand):
     help = "Fills the table with the data from csv file"
 
     def handle(self, *args, **options):
-        with open(BASE_DIR.parent / 'data/tags.csv', 'r') as csv_file:
+        with open(BASE_DIR / 'data/tags.csv', 'r') as csv_file:
             lines = csv_file.readlines()
             for line in lines:
                 data = line.split(',')
