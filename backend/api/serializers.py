@@ -188,34 +188,34 @@ class RecipeSerializer(serializers.ModelSerializer):
                 return obj.in_shopping_cart.filter(user=request.user).exists()
         return False
 
+    def _validate_ingredients(self, ingredients):
+        if not isinstance(ingredients, list) or not ingredients:
+            raise serializers.ValidationError('Ингредиенты обязательны и должны быть списком.')
+        for ingredient in ingredients:
+            if 'id' not in ingredient or 'amount' not in ingredient:
+                raise serializers.ValidationError('Каждый ингредиент должен содержать id и количество.')
+            try:
+                amount = int(ingredient['amount'])
+                if amount < AMOUNT_MIN or amount > AMOUNT_MAX:
+                    raise serializers.ValidationError(
+                        f'Количество ингредиента должно быть в пределах от {AMOUNT_MIN} до {AMOUNT_MAX}.'
+                    )
+            except ValueError:
+                raise serializers.ValidationError('Количество ингредиента должно быть числом.')
+
     def create(self, validated_data):
-        """Создаем новый рецепт."""
-        if (
-            'ingredients' not in self.initial_data
-            or 'tags' not in self.initial_data
-        ):
-            raise serializers.ValidationError(
-                'Теги и ингредиенты обязательны.'
-            )
-        ingredients = self.initial_data['ingredients']
-        tags = self.initial_data['tags']
+        ingredients = self.initial_data.get('ingredients')
+        tags = self.initial_data.get('tags')
+        self._validate_ingredients(ingredients)
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(get_object_or_404(Tag, pk=id) for id in tags)
         self._process_ingredients(recipe, ingredients)
         return recipe
 
     def update(self, instance, validated_data):
-        """Обновляем экземпляр рецепта с указанными данными."""
-        if (
-            'ingredients' not in self.initial_data
-            or 'tags' not in self.initial_data
-        ):
-            raise serializers.ValidationError(
-                'Теги и ингредиенты обязательны.'
-            )
-
-        ingredients = self.initial_data['ingredients']
-        tags = self.initial_data['tags']
+        ingredients = self.initial_data.get('ingredients')
+        tags = self.initial_data.get('tags')
+        self._validate_ingredients(ingredients)
 
         instance.name = validated_data.get('name', instance.name)
         instance.text = validated_data.get('text', instance.text)
@@ -225,15 +225,18 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.image = validated_data.get('image', instance.image)
         instance.tags.set(get_object_or_404(Tag, pk=id) for id in tags)
         instance.recipe_ingredients.all().delete()
-        instance.ingredients.set(get_object_or_404(Ingredient, pk=i['id']) for i in ingredients)
+        self._process_ingredients(instance, ingredients)
         return instance
 
+
     def _process_ingredients(self, recipe, ingredients_data):
-        ingredients = [
-            RecipeIngredient(recipe=recipe, ingredient=Ingredient.objects.get(id=ingredient['id']), amount=ingredient['amount'])
-            for ingredient in ingredients_data
-        ]
+        ingredients = []
+        for ingredient_data in ingredients_data:
+            ingredient = get_object_or_404(Ingredient, id=ingredient_data['id'])
+            amount = ingredient_data['amount']
+            ingredients.append(RecipeIngredient(recipe=recipe, ingredient=ingredient, amount=amount))
         RecipeIngredient.objects.bulk_create(ingredients)
+
 
     def to_representation(self, instance):
         return super().to_representation(instance)

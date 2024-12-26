@@ -140,6 +140,14 @@ class RecipeDetailView(RetrieveModelMixin, APIView):
         serializer.save()
         return Response(serializer.data)
 
+    def delete(self, request, id, *args, **kwargs):
+        """Delete a recipe (author only)."""
+        permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+        recipe = get_object_or_404(Recipe, id=id)
+        self.check_object_permissions(request, recipe)
+        recipe.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class RecipeShortLinkView(APIView):
     """Получаем сокращенную ссылку на рецепт по его ID."""
