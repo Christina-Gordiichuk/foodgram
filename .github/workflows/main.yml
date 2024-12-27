@@ -17,9 +17,7 @@ jobs:
         script: |
           sudo rm -rf foodgram/
           sudo git clone https://github.com/Christina-Gordiichuk/foodgram/
-          sudo su
           cd foodgram/
-          exit
           sudo docker system prune -a --force
           sudo npm cache clean --force
           sudo apt-get clean
