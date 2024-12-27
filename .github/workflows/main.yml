@@ -15,8 +15,9 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
+          rm -rf foodgram/
           git clone https://github.com/Christina-Gordiichuk/foodgram/
-          cd foodgram
+          cd foodgram/
           sudo docker system prune -a --force
           sudo npm cache clean --force
           sudo apt-get clean
