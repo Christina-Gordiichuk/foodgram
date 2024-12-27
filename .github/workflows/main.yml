@@ -23,7 +23,8 @@ jobs:
           sudo journalctl --vacuum-size=100M
           sudo journalctl --vacuum-time=1d
           sudo journalctl --vacuum-files=10
-          sudo docker compose -f docker-compose.yml up --build
+          sudo docker compose down -v
+          sudo docker compose -f docker-compose.yml up --build --detach
   send_message:
     runs-on: ubuntu-latest
     needs: deploy
