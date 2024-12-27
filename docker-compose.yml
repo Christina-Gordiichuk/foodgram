@@ -43,7 +43,7 @@ services:
       - "443:443"
     volumes:
     # copy nginx's conf file
-      - /etc/ssl:/etc/nginx/ssl:ro
+      - ./ssl:/etc/nginx/ssl:ro
       - ./infra/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - media_volume:/mnt/media
     # mount shared static_volume to /mnt/static
