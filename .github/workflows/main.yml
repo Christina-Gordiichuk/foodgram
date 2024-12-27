@@ -15,16 +15,17 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
+          sudo su
           rm -rf foodgram/
           git clone https://github.com/Christina-Gordiichuk/foodgram/
           cd foodgram/
-          sudo docker system prune -a --force
-          sudo npm cache clean --force
-          sudo apt-get clean
-          sudo journalctl --vacuum-size=100M
-          sudo journalctl --vacuum-time=1d
-          sudo journalctl --vacuum-files=10
-          sudo docker compose -f docker-compose.yml up --build
+          docker system prune -a --force
+          npm cache clean --force
+          apt-get clean
+          journalctl --vacuum-size=100M
+          journalctl --vacuum-time=1d
+          journalctl --vacuum-files=10
+          docker compose -f docker-compose.yml up --build
   send_message:
     runs-on: ubuntu-latest
     needs: deploy
