@@ -201,9 +201,8 @@ class RecipeSerializer(serializers.ModelSerializer):
                 amount = int(ingredient['amount'])
                 if amount < AMOUNT_MIN or amount > AMOUNT_MAX:
                     raise serializers.ValidationError(
-                        'Количество ингредиента должно быть' +
-                        f' в пределах от {AMOUNT_MIN} до {AMOUNT_MAX}.'
-                    )
+                        'Количество ингредиента должно быть'
+                        + f' в пределах от {AMOUNT_MIN} до {AMOUNT_MAX}.')
             except ValueError:
                 raise serializers.ValidationError(
                     'Количество ингредиента должно быть числом.')
