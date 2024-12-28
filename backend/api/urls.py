@@ -28,7 +28,7 @@ urlpatterns = [
         include('djoser.urls.authtoken')
     ),
     path(
-        'auth/users/', 
+        'auth/users/',
         include('djoser.urls')
     ),
     # Получаем список пользователей.
