@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from tags.models import Tag
 from backend.settings import BASE_DIR
 from django.db.utils import IntegrityError
@@ -13,7 +13,8 @@ class Command(BaseCommand):
             for line in lines:
                 data = line.split(',')
                 try:
-                    ingr = Tag.objects.create(name=data[0].strip(), slug=data[0].strip())
+                    ingr = Tag.objects.create(
+                        name=data[0].strip(), slug=data[0].strip())
                     ingr.save()
                 except IntegrityError:
                     continue
