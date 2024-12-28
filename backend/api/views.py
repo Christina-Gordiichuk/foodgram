@@ -12,20 +12,13 @@ from djoser.views import UserViewSet as djoser_UserViewSet
 from rest_framework import generics, filters, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.mixins import (
-    ListModelMixin,
-    RetrieveModelMixin,
-    CreateModelMixin,
-    DestroyModelMixin,
-)
-from rest_framework.generics import GenericAPIView
+from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from ingredients.models import Ingredient
 from recipes.models import Recipe, ShoppingCart, Favorite
 from tags.models import Tag
 from users.models import User, Subscription
-from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
     IngredientSerializer,
     RecipeSerializer,
@@ -78,15 +71,18 @@ class RecipeAPIView(APIView):
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(queryset, request)
         if page is not None:
-            serializer = RecipeSerializer(page, many=True, context={'request': request})
+            serializer = RecipeSerializer(page, many=True,
+                                          context={'request': request})
             return paginator.get_paginated_response(serializer.data)
-        serializer = RecipeSerializer(queryset, many=True, context={'request': request})
+        serializer = RecipeSerializer(queryset, many=True,
+                                      context={'request': request})
         return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
         """Create a new recipe."""
         self.permission_classes = [permissions.IsAuthenticated]
-        serializer = RecipeSerializer(data=request.data, context={'request': request})
+        serializer = RecipeSerializer(data=request.data,
+                                      context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save(author=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -95,7 +91,9 @@ class RecipeAPIView(APIView):
         """Update a recipe (author only)."""
         recipe = get_object_or_404(Recipe, id=id)
         self.check_object_permissions(request, recipe)
-        serializer = RecipeSerializer(recipe, data=request.data, partial=True, context={'request': request})
+        serializer = RecipeSerializer(recipe, data=request.data,
+                                      partial=True,
+                                      context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
@@ -110,7 +108,8 @@ class RecipeAPIView(APIView):
     def filter_queryset(self, queryset):
         """Apply filters to the queryset."""
         for backend in self.filter_backends:
-            queryset = backend().filter_queryset(self.request, queryset, self)
+            queryset = backend().filter_queryset(
+                self.request, queryset, self)
         return queryset
 
     def check_object_permissions(self, request, obj):
@@ -133,9 +132,12 @@ class RecipeDetailView(RetrieveModelMixin, APIView):
     def patch(self, request, id, *args, **kwargs):
         """Update a recipe (author only)."""
         permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+        print(permission_classes)
         recipe = get_object_or_404(Recipe, id=id)
         self.check_object_permissions(request, recipe)
-        serializer = RecipeSerializer(recipe, data=request.data, partial=True, context={'request': request})
+        serializer = RecipeSerializer(recipe, data=request.data,
+                                      partial=True,
+                                      context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
@@ -143,6 +145,7 @@ class RecipeDetailView(RetrieveModelMixin, APIView):
     def delete(self, request, id, *args, **kwargs):
         """Delete a recipe (author only)."""
         permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+        print(permission_classes)
         recipe = get_object_or_404(Recipe, id=id)
         self.check_object_permissions(request, recipe)
         recipe.delete()
