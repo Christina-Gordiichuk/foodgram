@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from ingredients.models import Ingredient
 from backend.settings import BASE_DIR
 from django.db.utils import IntegrityError
@@ -13,8 +13,9 @@ class Command(BaseCommand):
             for line in lines:
                 data = line.split(',')
                 try:
-                    ingr = Ingredient.objects.create(name=data[0].strip(),
-                                                     measurement_unit=data[1].strip())
+                    ingr = Ingredient.objects.create(
+                        name=data[0].strip(),
+                        measurement_unit=data[1].strip())
                     ingr.save()
                 except IntegrityError:
                     continue
@@ -22,5 +23,7 @@ class Command(BaseCommand):
                     raise e
 
                 self.stdout.write(
-                    self.style.SUCCESS('Successfully wrote "%s" with unit "%s"' % (data[0], data[1]))
+                    self.style.SUCCESS(
+                        'Successfully wrote "%s" with unit "%s"' % (
+                            data[0], data[1]))
                 )
