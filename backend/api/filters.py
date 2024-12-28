@@ -1,7 +1,7 @@
 from django_filters import rest_framework as filters
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Exists, OuterRef
 from recipes.models import Recipe, Favorite, ShoppingCart
-from tags.models import Tag
+
 
 class RecipeFilter(filters.FilterSet):
     """
@@ -13,7 +13,8 @@ class RecipeFilter(filters.FilterSet):
     - Tags (tags)
     """
     is_favorited = filters.BooleanFilter(method='filter_is_favorited')
-    is_in_shopping_cart = filters.BooleanFilter(method='filter_is_in_shopping_cart')
+    is_in_shopping_cart = filters.BooleanFilter(
+        method='filter_is_in_shopping_cart')
     author = filters.NumberFilter(field_name='author__id')
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
 
@@ -27,9 +28,13 @@ class RecipeFilter(filters.FilterSet):
         """
         user = self.request.user
         if user.is_authenticated and value:
-            return queryset.filter(Exists(Favorite.objects.filter(user=user, recipe=OuterRef('pk'))))
+            return queryset.filter(Exists(
+                Favorite.objects.filter(
+                    user=user, recipe=OuterRef('pk'))))
         elif user.is_authenticated and not value:
-            return queryset.exclude(Exists(Favorite.objects.filter(user=user, recipe=OuterRef('pk'))))
+            return queryset.exclude(Exists(
+                Favorite.objects.filter(
+                    user=user, recipe=OuterRef('pk'))))
         return queryset
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
@@ -38,7 +43,11 @@ class RecipeFilter(filters.FilterSet):
         """
         user = self.request.user
         if user.is_authenticated and value:
-            return queryset.filter(Exists(ShoppingCart.objects.filter(user=user, recipe=OuterRef('pk'))))
+            return queryset.filter(Exists(
+                ShoppingCart.objects.filter(
+                    user=user, recipe=OuterRef('pk'))))
         elif user.is_authenticated and not value:
-            return queryset.exclude(Exists(ShoppingCart.objects.filter(user=user, recipe=OuterRef('pk'))))
+            return queryset.exclude(Exists(
+                ShoppingCart.objects.filter(
+                    user=user, recipe=OuterRef('pk'))))
         return queryset
