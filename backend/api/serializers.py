@@ -175,7 +175,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         """Check if the recipe is favorited by the current user."""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return Favorite.objects.filter(user=request.user, recipe=obj).exists()
+            return Favorite.objects.filter(
+                user=request.user, recipe=obj).exists()
         print(request.user.is_authenticated)
         return False
 
@@ -190,18 +191,22 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def _validate_ingredients(self, ingredients):
         if not isinstance(ingredients, list) or not ingredients:
-            raise serializers.ValidationError('Ингредиенты обязательны и должны быть списком.')
+            raise serializers.ValidationError(
+                'Ингредиенты обязательны и должны быть списком.')
         for ingredient in ingredients:
             if 'id' not in ingredient or 'amount' not in ingredient:
-                raise serializers.ValidationError('Каждый ингредиент должен содержать id и количество.')
+                raise serializers.ValidationError(
+                    'Каждый ингредиент должен содержать id и количество.')
             try:
                 amount = int(ingredient['amount'])
                 if amount < AMOUNT_MIN or amount > AMOUNT_MAX:
                     raise serializers.ValidationError(
-                        f'Количество ингредиента должно быть в пределах от {AMOUNT_MIN} до {AMOUNT_MAX}.'
+                        'Количество ингредиента должно быть' +\
+                        f' в пределах от {AMOUNT_MIN} до {AMOUNT_MAX}.'
                     )
             except ValueError:
-                raise serializers.ValidationError('Количество ингредиента должно быть числом.')
+                raise serializers.ValidationError(
+                    'Количество ингредиента должно быть числом.')
 
     def create(self, validated_data):
         ingredients = self.initial_data.get('ingredients')
@@ -228,13 +233,16 @@ class RecipeSerializer(serializers.ModelSerializer):
         self._process_ingredients(instance, ingredients)
         return instance
 
-
     def _process_ingredients(self, recipe, ingredients_data):
         ingredients = []
         for ingredient_data in ingredients_data:
-            ingredient = get_object_or_404(Ingredient, id=ingredient_data['id'])
+            ingredient = get_object_or_404(
+                Ingredient, id=ingredient_data['id'])
             amount = ingredient_data['amount']
-            ingredients.append(RecipeIngredient(recipe=recipe, ingredient=ingredient, amount=amount))
+            ingredients.append(RecipeIngredient(
+                recipe=recipe, 
+                ingredient=ingredient, 
+                amount=amount))
         RecipeIngredient.objects.bulk_create(ingredients)
 
 
@@ -251,7 +259,8 @@ class ShoppingListSerializer(serializers.ModelSerializer):
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
     """Сериализатор для модели ShoppingCart."""
-    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+    recipe = serializers.PrimaryKeyRelatedField(
+        queryset=Recipe.objects.all())
 
     class Meta:
         model = ShoppingCart
