@@ -201,7 +201,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                 amount = int(ingredient['amount'])
                 if amount < AMOUNT_MIN or amount > AMOUNT_MAX:
                     raise serializers.ValidationError(
-                        'Количество ингредиента должно быть' +\
+                        'Количество ингредиента должно быть' +
                         f' в пределах от {AMOUNT_MIN} до {AMOUNT_MAX}.'
                     )
             except ValueError:
@@ -240,11 +240,10 @@ class RecipeSerializer(serializers.ModelSerializer):
                 Ingredient, id=ingredient_data['id'])
             amount = ingredient_data['amount']
             ingredients.append(RecipeIngredient(
-                recipe=recipe, 
-                ingredient=ingredient, 
+                recipe=recipe,
+                ingredient=ingredient,
                 amount=amount))
         RecipeIngredient.objects.bulk_create(ingredients)
-
 
     def to_representation(self, instance):
         return super().to_representation(instance)
