@@ -135,7 +135,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для рецептов."""
     author = UserSerializer(read_only=True)
     ingredients = IngredientsSerializer(source='recipe_ingredients',
-                                        many=True, read_only=True)
+                                        many=True)
     tags = TagSerializer(many=True, read_only=True)
     image = Base64ImageField()
     is_favorited = serializers.BooleanField(default=False, read_only=True)
@@ -177,7 +177,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return Favorite.objects.filter(
                 user=request.user, recipe=obj).exists()
-        print(request.user.is_authenticated)
         return False
 
     def get_in_shopping_cart(self, obj):
@@ -185,7 +184,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request:
             if request.user.is_authenticated:
-                print(request.user.is_authenticated)
                 return obj.in_shopping_cart.filter(user=request.user).exists()
         return False
 
@@ -197,15 +195,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             if 'id' not in ingredient or 'amount' not in ingredient:
                 raise serializers.ValidationError(
                     'Каждый ингредиент должен содержать id и количество.')
-            try:
-                amount = int(ingredient['amount'])
-                if amount < AMOUNT_MIN or amount > AMOUNT_MAX:
-                    raise serializers.ValidationError(
-                        'Количество ингредиента должно быть'
-                        + f' в пределах от {AMOUNT_MIN} до {AMOUNT_MAX}.')
-            except ValueError:
-                raise serializers.ValidationError(
-                    'Количество ингредиента должно быть числом.')
 
     def create(self, validated_data):
         ingredients = self.initial_data.get('ingredients')
