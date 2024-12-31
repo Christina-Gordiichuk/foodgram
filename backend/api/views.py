@@ -132,7 +132,6 @@ class RecipeDetailView(RetrieveModelMixin, APIView):
     def patch(self, request, id, *args, **kwargs):
         """Update a recipe (author only)."""
         permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-        print(permission_classes)
         recipe = get_object_or_404(Recipe, id=id)
         self.check_object_permissions(request, recipe)
         serializer = RecipeSerializer(recipe, data=request.data,
@@ -145,7 +144,6 @@ class RecipeDetailView(RetrieveModelMixin, APIView):
     def delete(self, request, id, *args, **kwargs):
         """Delete a recipe (author only)."""
         permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-        print(permission_classes)
         recipe = get_object_or_404(Recipe, id=id)
         self.check_object_permissions(request, recipe)
         recipe.delete()
