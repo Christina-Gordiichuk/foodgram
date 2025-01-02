@@ -24,7 +24,6 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class TagSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели Tag."""
     class Meta:
         model = Tag
         fields = ['id', 'name', 'slug']
@@ -200,6 +199,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients = self.initial_data.get('ingredients')
         tags = self.initial_data.get('tags')
         self._validate_ingredients(ingredients)
+        validated_data.pop('tags', None)
+        validated_data.pop('recipe_ingredients', None)
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(get_object_or_404(Tag, pk=id) for id in tags)
         self._process_ingredients(recipe, ingredients)
@@ -207,9 +208,10 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         ingredients = self.initial_data.get('ingredients')
+        print(validated_data)
         tags = self.initial_data.get('tags')
         self._validate_ingredients(ingredients)
-
+        print(instance.name, instance.text, instance.image)
         instance.name = validated_data.get('name', instance.name)
         instance.text = validated_data.get('text', instance.text)
         instance.cooking_time = validated_data.get(
@@ -219,6 +221,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.tags.set(get_object_or_404(Tag, pk=id) for id in tags)
         instance.recipe_ingredients.all().delete()
         self._process_ingredients(instance, ingredients)
+        instance.save()
         return instance
 
     def _process_ingredients(self, recipe, ingredients_data):
@@ -231,7 +234,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                 recipe=recipe,
                 ingredient=ingredient,
                 amount=amount))
-        RecipeIngredient.objects.bulk_create(ingredients)
+        recipe.recipe_ingredients.set(ingredients, bulk=False)
 
     def to_representation(self, instance):
         return super().to_representation(instance)
@@ -321,3 +324,4 @@ class UserWithRecipesSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.subscribers.filter(user=request.user).exists()
         return False
+
