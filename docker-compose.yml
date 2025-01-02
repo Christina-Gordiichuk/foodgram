@@ -29,7 +29,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - media_volume:/mnt/media
+      - media_volume:/app/media
     depends_on:
       - db
     command: ["/bin/bash", "-c", "python3 manage.py makemigrations users tags recipes ingredients && python3 manage.py migrate -v 3 && python3 manage.py fill_tags_from_csv && python3 manage.py fill_ingredients_from_csv && gunicorn --bind 0.0.0.0:8000 backend.wsgi"]
