@@ -36,10 +36,11 @@ class IngredientListView(generics.ListAPIView):
     """
     Получаем список ингредиентов с возможностью поиска по имени.
     """
+
     serializer_class = IngredientSerializer
 
     def get_queryset(self):
-        name = self.request.query_params.get('name', None)
+        name = self.request.query_params.get("name", None)
         queryset = Ingredient.objects.all()
         if name:
             queryset = queryset.filter(name__startswith=name)
@@ -48,15 +49,17 @@ class IngredientListView(generics.ListAPIView):
 
 class IngredientDetailView(generics.RetrieveAPIView):
     """Получаем ингредиент по его ID."""
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    lookup_field = 'id'
+    lookup_field = "id"
 
 
 class RecipeAPIView(APIView):
     """
     Unified API view for Recipe operations: list, create, update, and delete.
     """
+
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
@@ -72,17 +75,17 @@ class RecipeAPIView(APIView):
         page = paginator.paginate_queryset(queryset, request)
         if page is not None:
             serializer = RecipeSerializer(page, many=True,
-                                          context={'request': request})
+                                          context={"request": request})
             return paginator.get_paginated_response(serializer.data)
         serializer = RecipeSerializer(queryset, many=True,
-                                      context={'request': request})
+                                      context={"request": request})
         return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
         """Create a new recipe."""
         self.permission_classes = [permissions.IsAuthenticated]
         serializer = RecipeSerializer(data=request.data,
-                                      context={'request': request})
+                                      context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save(author=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -91,9 +94,10 @@ class RecipeAPIView(APIView):
         """Update a recipe (author only)."""
         recipe = get_object_or_404(Recipe, id=id)
         self.check_object_permissions(request, recipe)
-        serializer = RecipeSerializer(recipe, data=request.data,
-                                      partial=True,
-                                      context={'request': request})
+        serializer = RecipeSerializer(
+            recipe, data=request.data, partial=True,
+            context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
@@ -121,6 +125,7 @@ class RecipeAPIView(APIView):
 
 class RecipeDetailView(RetrieveModelMixin, APIView):
     """Получаем детальную информацию о рецепте по ID."""
+
     permission_classes = [permissions.AllowAny]
     serializer_class = RecipeSerializer
 
@@ -131,19 +136,20 @@ class RecipeDetailView(RetrieveModelMixin, APIView):
 
     def patch(self, request, id, *args, **kwargs):
         """Update a recipe (author only)."""
-        permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+        self.permission_classes = [permissions.IsAuthenticatedOrReadOnly]
         recipe = get_object_or_404(Recipe, id=id)
         self.check_object_permissions(request, recipe)
-        serializer = RecipeSerializer(recipe, data=request.data,
-                                      partial=True,
-                                      context={'request': request})
+        serializer = RecipeSerializer(
+            recipe, data=request.data, partial=True,
+            context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
 
     def delete(self, request, id, *args, **kwargs):
         """Delete a recipe (author only)."""
-        permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+        self.permission_classes = [permissions.IsAuthenticatedOrReadOnly]
         recipe = get_object_or_404(Recipe, id=id)
         self.check_object_permissions(request, recipe)
         recipe.delete()
@@ -152,41 +158,42 @@ class RecipeDetailView(RetrieveModelMixin, APIView):
 
 class RecipeShortLinkView(APIView):
     """Получаем сокращенную ссылку на рецепт по его ID."""
+
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, id, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=id)
-        short_link = f'{settings.SITE_URL}/r/{recipe.id}'
-        return Response({'short-link': short_link})
+        short_link = f"{settings.SITE_URL}/r/{recipe.id}"
+        return Response({"short-link": short_link})
 
 
 class DownloadShoppingListView(APIView):
     """Скачиваем файл со списком покупок."""
+
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         shopping_list = ShoppingCart.objects.filter(user=request.user)
         file_content = "\n".join([str(item) for item in shopping_list])
-        response = Response(file_content, content_type='text/plain')
-        response['Content-Disposition'] = (
+        response = Response(file_content, content_type="text/plain")
+        response["Content-Disposition"] = \
             'attachment; filename="shopping_list.txt"'
-        )
         return response
 
 
 class AddRecipeToShoppingListView(APIView):
     """Добавляем рецепт в список покупок."""
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request, id, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=id)
         data = {
-            'user': request.user.id,
-            'recipe': recipe.id,
+            "user": request.user.id,
+            "recipe": recipe.id,
         }
         serializer = ShoppingCartSerializer(
-            data=data, context={'request': request}
-        )
+            data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -201,6 +208,7 @@ class AddRecipeToShoppingListView(APIView):
 
 class RecipeFavoritesView(APIView):
     """Добавляем рецепт в избранное."""
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request, id, *args, **kwargs):
@@ -211,30 +219,33 @@ class RecipeFavoritesView(APIView):
 
         if not created:
             return Response(
-                {'detail': 'Рецепт уже в избранном!'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Рецепт уже в избранном!"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         serializer = FavoriteSerializer(favorite)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, id, *args, **kwargs):
-        favorite = get_object_or_404(Favorite, user=request.user, recipe_id=id)
+        favorite = get_object_or_404(
+            Favorite, user=request.user, recipe_id=id)
         favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagListView(generics.ListAPIView):
     """Получаем список всех тегов."""
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
 
 class TagDetailView(generics.RetrieveAPIView):
     """Получаем информацию о конкретном теге по ID."""
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    lookup_field = 'id'
+    lookup_field = "id"
 
 
 class UserListView(APIView):
@@ -242,6 +253,7 @@ class UserListView(APIView):
     Получаем список пользователей с поддержкой пагинации.
     Используем сериализатор UserSerializer для форматирования данных.
     """
+
     def get(self, request):
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
@@ -255,7 +267,7 @@ class UsersView(View):
 
     def post(self, request, *args, **kwargs):
         # Call Djoser's UserViewSet directly for user creation
-        view = djoser_UserViewSet.as_view({'post': 'create'})
+        view = djoser_UserViewSet.as_view({"post": "create"})
         return view(request, *args, **kwargs)
 
 
@@ -264,6 +276,7 @@ class UserProfileView(APIView):
     Получаем профиль конкретного пользователя по его ID.
     Используем ID пользователя для поиска.
     """
+
     def get(self, request, id):
         user = get_object_or_404(User, id=id)
         serializer = UserSerializer(user)
@@ -272,6 +285,7 @@ class UserProfileView(APIView):
 
 class CurrentUserView(APIView):
     """Получаем профиль текущего пользователя. /me/"""
+
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -289,35 +303,29 @@ class UpdateAvatarView(APIView):
 
     def put(self, request):
         user = request.user
-        avatar_data = request.data.get('avatar')
+        avatar_data = request.data.get("avatar")
 
         if not avatar_data:
             return Response(
-                {'detail': 'Аватар не предоставлен!'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Аватар не предоставлен!"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
-            format, imgstr = avatar_data.split(';base64,')
-            ext = format.split('/')[-1]
-            file_name = f'{uuid.uuid4()}.{ext}'
+            format, imgstr = avatar_data.split(";base64,")
+            ext = format.split("/")[-1]
+            file_name = f"{uuid.uuid4()}.{ext}"
 
             user.avatar.save(
-                file_name,
-                ContentFile(base64.b64decode(imgstr)),
-                save=True
+                file_name, ContentFile(base64.b64decode(imgstr)), save=True
             )
 
             return Response(
-                {'avatar': user.avatar.url},
-                status=status.HTTP_200_OK
-            )
+                {"avatar": user.avatar.url}, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response(
-                {'detail': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+                {"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
         user = request.user
@@ -326,7 +334,7 @@ class UpdateAvatarView(APIView):
             user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
-            {'detail': 'Аватар не установлен.'},
+            {"detail": "Аватар не установлен."},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -336,23 +344,24 @@ class ChangePasswordView(APIView):
     Изменяем пароль текущего пользователя.
     Требует авторизации.
     """
+
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         user = request.user
-        current_password = request.data.get('current_password')
-        new_password = request.data.get('new_password')
+        current_password = request.data.get("current_password")
+        new_password = request.data.get("new_password")
 
         if not current_password or not new_password:
             return Response(
-                {'detail': 'Текущий и новый пароли обязательны!'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Текущий и новый пароли обязательны!"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         if not user.check_password(current_password):
             return Response(
-                {'current_password': ['Неверный текущий пароль!']},
-                status=status.HTTP_400_BAD_REQUEST
+                {"current_password": ["Неверный текущий пароль!"]},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -361,47 +370,41 @@ class ChangePasswordView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
             return Response(
-                {'detail': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+                {"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SubscriptionsView(APIView):
     """Возвращаем пользователей, на которых подписан текущий пользователь."""
+
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         user = request.user
         subscribed_users = Subscription.objects.filter(user=user).values_list(
-            'subscribed_user', flat=True
+            "subscribed_user", flat=True
         )
-        users = (
-            User.objects
-            .filter(id__in=subscribed_users)
-            .prefetch_related('recipes')
-        )
+        users = User.objects.filter(
+            id__in=subscribed_users).prefetch_related("recipes")
         serializer = UserWithRecipesSerializer(users, many=True)
         return Response(serializer.data)
 
 
 class SubscribeView(APIView):
     """Подписаться на пользователя."""
+
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, id):
         subscribed_user = get_object_or_404(User, id=id)
 
         if request.user.subscriptions.filter(
-            subscribed_user=subscribed_user
-        ).exists():
+                subscribed_user=subscribed_user).exists():
             return Response(
-                {'detail': 'Вы уже подписаны на этого пользователя!'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Вы уже подписаны на этого пользователя!"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         Subscription.objects.create(
-            user=request.user,
-            subscribed_user=subscribed_user
-        )
+            user=request.user, subscribed_user=subscribed_user)
         serializer = UserWithRecipesSerializer(subscribed_user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -416,6 +419,6 @@ class SubscribeView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(
-            {'detail': 'Подписка не найдена.'},
+            {"detail": "Подписка не найдена."},
             status=status.HTTP_404_NOT_FOUND
         )
